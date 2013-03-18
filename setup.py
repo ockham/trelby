@@ -82,8 +82,21 @@ options = {
     }
 }
 
+dataFiles = []
+
 if sys.platform == "win32":
     import py2exe
+
+    # Distutils' package_data argument doesn't work with py2exe.
+    # On the other hand, we don't need the data_files argument
+    # (which we're only using under Linux for stuff like our .desktop file and
+    # man page that go to system directories), so we'll just use it instead
+    # of package_data.
+    packageData = {}
+    for path, files in packageData.iteritems():
+        for file in files:
+            dataFile = os.path.normpath(os.path.join(path, file))
+            dataFiles.append((os.path.dirname(dataFile),dataFile))
 
     platformOptions = dict(
         zipfile = "library.zip",
@@ -94,12 +107,19 @@ if sys.platform == "win32":
            }]
         )
 else:
+    packageData = {"src": ["../resources/*",
+          "../names.txt.gz",
+          "../dict_en.dat.gz",
+          "../sample.trelby",
+          "../fileformat.txt",
+          "../manual.html",
+          "../README",
+    ]}
+    dataFiles = [
+        ("applications", ["trelby.desktop"]),
+        ("man/man1", ["trelby.1.gz"]),
+        ]
     platformOptions = {}
-
-dataFiles = [
-    ("applications", ["trelby.desktop"]),
-    ("man/man1", ["trelby.1.gz"]),
-    ]
 
 setup(
     name = "Trelby",
@@ -143,14 +163,7 @@ Features:
       url = "http://www.trelby.org/",
       license = "GPL",
       packages = ["src"],
-      package_data = {"src": ["../resources/*",
-          "../names.txt.gz",
-          "../dict_en.dat.gz",
-          "../sample.trelby",
-          "../fileformat.txt",
-          "../manual.html",
-          "../README",
-      ]},
+      package_data = packageData,
       data_files = dataFiles,
       scripts = ["bin/trelby"],
       options = options,
